@@ -245,9 +245,20 @@ def profile():
     connection = sqlite3.connect('jobtrack.db')
     connection.row_factory = sqlite3.Row
     cursor = connection.cursor()
-
     cursor.execute("SELECT * FROM info WHERE user_id = ? ORDER BY id DESC", (session["user_id"],))
     info = cursor.fetchall()
+    cursor.execute("SELECT COUNT(*) AS rejected_count FROM applications WHERE user_id = ? AND app_status = 'Rejected'", (session["user_id"],))
+    rejected_count = cursor.fetchone()["rejected_count"]
+
+    cursor.execute("SELECT COUNT(*) AS offer_count FROM applications WHERE user_id = ? AND app_status = 'Offer'", (session["user_id"],))
+    offer_count = cursor.fetchone()["offer_count"]
+
+    cursor.execute("SELECT COUNT(*) AS interview_count FROM applications WHERE user_id = ? AND app_status = 'Interview'", (session["user_id"],))
+    interview_count = cursor.fetchone()["interview_count"]
+
+    cursor.execute("SELECT COUNT(*) AS application_count FROM applications WHERE user_id = ?", (session["user_id"],))
+    application_count = cursor.fetchone()["application_count"]
+
     connection.close()
 
     # Provide default values if no info is available
@@ -261,7 +272,7 @@ def profile():
             "profile_picture": None
         }]
 
-    return render_template("profile.html", info=info)
+        return render_template("profile.html", info=info, rejected_count=rejected_count, offer_count=offer_count, interview_count=interview_count, application_count=application_count)
 
 
 @app.route("/forgot", methods=["GET", "POST"])
@@ -347,9 +358,15 @@ def history():
     cursor = connection.cursor()
     cursor.execute("SELECT * FROM applications WHERE user_id = ? AND (app_status = ? OR app_status = ?) ORDER BY date DESC", (session["user_id"], "Rejected", "Offer"))
     applications = cursor.fetchall()
+    cursor.execute("SELECT COUNT(*) AS rejected_count FROM applications WHERE user_id = ? AND app_status = 'Rejected'", (session["user_id"],))
+    rejected_count = cursor.fetchone()["rejected_count"]
+
+    cursor.execute("SELECT COUNT(*) AS offer_count FROM applications WHERE user_id = ? AND app_status = 'Offer'", (session["user_id"],))
+    offer_count = cursor.fetchone()["offer_count"]
+
     connection.close()
     
-    return render_template("history.html", applications=applications)
+    return render_template("history.html", applications=applications, rejected_count=rejected_count, offer_count=offer_count)
 
 from flask import render_template, flash
 import datetime
